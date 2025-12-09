@@ -6,21 +6,18 @@ const crypto = require('crypto');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
+// Store raw body for signature verification (must be BEFORE express.json())
+app.use((req, res, next) => {
+  req.rawBody = '';
+  req.on('data', chunk => {
+    req.rawBody += chunk.toString();
+  });
+  next();
+});
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Store raw body for signature verification
-app.use((req, res, next) => {
-  let rawBody = '';
-  req.on('data', chunk => {
-    rawBody += chunk.toString();
-  });
-  req.on('end', () => {
-    req.rawBody = rawBody;
-    next();
-  });
-});
 
 // Verify Slack signature
 function verifySlackRequest(req) {
