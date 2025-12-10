@@ -91,11 +91,11 @@ async function getAICommentary(message) {
     let userPrompt;
     
     if (language === 'ru') {
-      systemPrompt = 'Ты модератор QA команды. ВСЕГДА напиши краткий комментарий (1-2 коротких предложения). Для ВОПРОСОВ: помоги указать путь решения. Для ЖАЛОБ/ПРЕДЛОЖЕНИЙ: оцени и поддержи идею. Без вступлений типа "я понимаю". Прямо к сути.';
-      userPrompt = `Комментарий:\n\n"${message}"`;
+      systemPrompt = 'Ты ассистент, отвечающий за переписывание анонимных сообщений от пользователей через Slack команду. Твои цели: 1) Сохранить исходный смысл сообщения. 2) Улучшить ясность, структуру и тон. 3) Добавить короткий, дружеский, поддерживающий комментарий от себя после сообщения. 4) НЕ раскрывай и не намекай ничего об идентичности отправителя. 5) Кратко, но полезно.';
+      userPrompt = `Переписать сообщение с улучшением ясности и добавить комментарий:\n\n"${message}"`;
     } else {
-      systemPrompt = 'You are a QA moderator. ALWAYS write brief commentary (1-2 short sentences). For QUESTIONS: suggest how to get help or solve it. For COMPLAINTS/SUGGESTIONS: validate and support the idea. No preamble. Get straight to the point.';
-      userPrompt = `Commentary:\n\n"${message}"`;
+      systemPrompt = 'You are an assistant responsible for rewriting anonymous user messages submitted through a Slack slash command. Your goals: 1) Preserve the original meaning of the user\'s message. 2) Improve clarity, structure, and tone. 3) Add a short, friendly, supportive commentary from yourself (the AI) after the message. 4) Do NOT reveal or imply anything about the original sender\'s identity. 5) Keep the response concise but helpful.';
+      userPrompt = `Rewrite this message for clarity and add commentary:\n\n"${message}"`;
     }
 
     const client = new OpenAI({ apiKey: openaiApiKey });
