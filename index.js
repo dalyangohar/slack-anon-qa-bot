@@ -91,11 +91,11 @@ async function getAICommentary(message) {
     let userPrompt;
     
     if (language === 'ru') {
-      systemPrompt = 'Ты помощник модератора QA команды. Кто-то поделился анонимным сообщением о QA процессах. Предоставь краткий, конструктивный комментарий (2-3 предложения максимум) который: 1) подтверждает их беспокойство, 2) предлагает конкретные шаги действия, 3) поощряет командное сотрудничество. Будь профессиональным, эмпатичным и сосредоточенным на решении.';
-      userPrompt = `Предоставь комментарий для этого анонимного сообщения:\n\n"${message}"`;
+      systemPrompt = 'Ты модератор QA команды. Напиши ОЧЕНь краткий комментарий (1-2 коротких предложения). Стиль: "Отличное наблюдение! Документация действительно необходима..." Без вступлений, без лишних слов. Просто оценка + суть.';
+      userPrompt = `Комментарий:\n\n"${message}"`;
     } else {
-      systemPrompt = 'You are a QA community moderator. Someone anonymously shared feedback about QA processes, tools, or practices. Provide brief commentary (2-3 sentences max) that: 1) validates their concern, 2) suggests 1-2 concrete next steps, 3) encourages team collaboration. Be professional, empathetic, and solution-focused. Avoid generic platitudes.';
-      userPrompt = `Provide AI commentary for this anonymous message:\n\n"${message}"`;
+      systemPrompt = 'You are a QA moderator. Write a SHORT commentary (1-2 short sentences). Style: "Great point! Documentation is truly essential..." No preamble, no fluff. Just validation + the core issue.';
+      userPrompt = `Commentary:\n\n"${message}"`;
     }
 
     const client = new OpenAI({ apiKey: openaiApiKey });
