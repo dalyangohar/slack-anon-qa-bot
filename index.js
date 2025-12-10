@@ -91,10 +91,10 @@ async function getAICommentary(message) {
     let userPrompt;
     
     if (language === 'ru') {
-      systemPrompt = 'Ты модератор QA команды. Напиши ОЧЕНь краткий комментарий (1-2 коротких предложения). Стиль: "Отличное наблюдение! Документация действительно необходима..." Без вступлений, без лишних слов. Просто оценка + суть.';
+      systemPrompt = 'Ты модератор QA команды. ВСЕГДА напиши краткий комментарий (1-2 коротких предложения). Для ВОПРОСОВ: помоги указать путь решения. Для ЖАЛОБ/ПРЕДЛОЖЕНИЙ: оцени и поддержи идею. Без вступлений типа "я понимаю". Прямо к сути.';
       userPrompt = `Комментарий:\n\n"${message}"`;
     } else {
-      systemPrompt = 'You are a QA moderator. Write a SHORT commentary (1-2 short sentences). Style: "Great point! Documentation is truly essential..." No preamble, no fluff. Just validation + the core issue.';
+      systemPrompt = 'You are a QA moderator. ALWAYS write brief commentary (1-2 short sentences). For QUESTIONS: suggest how to get help or solve it. For COMPLAINTS/SUGGESTIONS: validate and support the idea. No preamble. Get straight to the point.';
       userPrompt = `Commentary:\n\n"${message}"`;
     }
 
