@@ -3,7 +3,6 @@ const express = require('express');
 const axios = require('axios');
 const crypto = require('crypto');
 const { OpenAI } = require('openai');
-const { detect } = require('langdetect');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -57,11 +56,15 @@ app.get('/', (req, res) => {
 // Function to detect message language
 function detectLanguage(text) {
   try {
-    const results = detect(text);
-    if (results && results.length > 0) {
-      // Return the most confident language
-      return results[0];
+    // Check for Cyrillic characters (Russian, Ukrainian, etc.)
+    const cyrillicRegex = /[\u0400-\u04FF]/g;
+    const cyrillicMatches = text.match(cyrillicRegex);
+    
+    // If more than 20% of characters are Cyrillic, consider it Russian
+    if (cyrillicMatches && cyrillicMatches.length > text.length * 0.2) {
+      return 'ru';
     }
+    
     return 'en'; // Default to English
   } catch (error) {
     console.log('Language detection error:', error.message);
@@ -81,6 +84,7 @@ async function getAICommentary(message) {
 
     // Detect language
     const language = detectLanguage(message);
+    console.log(`Detected language: ${language} for message: "${message.substring(0, 50)}..."`);
     
     // Set system prompt based on language
     let systemPrompt;
