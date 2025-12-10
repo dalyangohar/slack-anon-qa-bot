@@ -3,11 +3,12 @@ const express = require('express');
 const axios = require('axios');
 const crypto = require('crypto');
 const { OpenAI } = require('openai');
+const { detect } = require('langdetect');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Store raw body for signature verification (must be BEFORE express.json())
+// Store raw body for signature verification
 app.use((req, res, next) => {
   req.rawBody = '';
   req.on('data', chunk => {
@@ -16,7 +17,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -26,16 +26,13 @@ function verifySlackRequest(req) {
   const slackSignature = req.headers['x-slack-signature'];
   const signingSecret = process.env.SLACK_SIGNING_SECRET;
 
-  // Check if request is not too old (Slack requirement: within 5 minutes)
   if (Math.abs(Math.floor(Date.now() / 1000) - timestamp) > 300) {
     console.log('Request timestamp too old');
     return false;
   }
 
-  // Create the base string: v0:timestamp:body
   const baseString = `v0:${timestamp}:${req.rawBody}`;
   
-  // Create HMAC SHA256 signature
   const hash = crypto
     .createHmac('sha256', signingSecret)
     .update(baseString)
@@ -43,7 +40,6 @@ function verifySlackRequest(req) {
   
   const signature = `v0=${hash}`;
 
-  // Compare signatures using constant-time comparison
   try {
     return crypto.timingSafeEqual(
       Buffer.from(slackSignature),
@@ -54,10 +50,24 @@ function verifySlackRequest(req) {
   }
 }
 
-// Health check endpoint
 app.get('/', (req, res) => {
   res.json({ status: 'ok', message: 'Anonymous QA Bot is running' });
 });
+
+// Function to detect message language
+function detectLanguage(text) {
+  try {
+    const results = detect(text);
+    if (results && results.length > 0) {
+      // Return the most confident language
+      return results[0];
+    }
+    return 'en'; // Default to English
+  } catch (error) {
+    console.log('Language detection error:', error.message);
+    return 'en'; // Default to English on error
+  }
+}
 
 // Function to get AI commentary using OpenAI
 async function getAICommentary(message) {
@@ -69,6 +79,21 @@ async function getAICommentary(message) {
       return null;
     }
 
+    // Detect language
+    const language = detectLanguage(message);
+    
+    // Set system prompt based on language
+    let systemPrompt;
+    let userPrompt;
+    
+    if (language === 'ru') {
+      systemPrompt = 'Ты помощник модератора QA команды. Кто-то поделился анонимным сообщением о QA процессах. Предоставь краткий, конструктивный комментарий (2-3 предложения максимум) который: 1) подтверждает их беспокойство, 2) предлагает конкретные шаги действия, 3) поощряет командное сотрудничество. Будь профессиональным, эмпатичным и сосредоточенным на решении.';
+      userPrompt = `Предоставь комментарий для этого анонимного сообщения:\n\n"${message}"`;
+    } else {
+      systemPrompt = 'You are a QA community moderator. Someone anonymously shared feedback about QA processes, tools, or practices. Provide brief commentary (2-3 sentences max) that: 1) validates their concern, 2) suggests 1-2 concrete next steps, 3) encourages team collaboration. Be professional, empathetic, and solution-focused. Avoid generic platitudes.';
+      userPrompt = `Provide AI commentary for this anonymous message:\n\n"${message}"`;
+    }
+
     const client = new OpenAI({ apiKey: openaiApiKey });
 
     const response = await client.chat.completions.create({
@@ -76,11 +101,11 @@ async function getAICommentary(message) {
       messages: [
         {
           role: 'system',
-          content: 'You are a helpful community moderator. Someone shared an anonymous message. Provide brief, supportive commentary (2-3 sentences max) that encourages discussion and constructive action. Be concise and encouraging.'
+          content: systemPrompt
         },
         {
           role: 'user',
-          content: `Provide AI commentary for this anonymous message:\n\n"${message}"`
+          content: userPrompt
         }
       ],
       max_tokens: 150,
