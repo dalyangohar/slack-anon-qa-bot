@@ -130,7 +130,7 @@ app.post('/slack/commands/anon-qa', async (req, res) => {
       const aiCommentary = await getAICommentary(text);
       
       // Build the final message
-      let finalMessage = `Anonymous message:\n\n${text}`;
+      let finalMessage = `🔒 *Anonymous message:*\n\n${text}`;
       
       if (aiCommentary) {
         finalMessage += `\n\n---\n📊 *AI Commentary:*\n${aiCommentary}`;
