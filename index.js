@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const crypto = require('crypto');
+const { OpenAI } = require('openai');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -58,6 +59,41 @@ app.get('/', (req, res) => {
   res.json({ status: 'ok', message: 'Anonymous QA Bot is running' });
 });
 
+// Function to get AI commentary using OpenAI
+async function getAICommentary(message) {
+  try {
+    const openaiApiKey = process.env.OPENAI_API_KEY;
+    
+    if (!openaiApiKey) {
+      console.log('OpenAI API key not configured, skipping AI commentary');
+      return null;
+    }
+
+    const client = new OpenAI({ apiKey: openaiApiKey });
+
+    const response = await client.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a helpful community moderator. Someone shared an anonymous message. Provide brief, supportive commentary (2-3 sentences max) that encourages discussion and constructive action. Be concise and encouraging.'
+        },
+        {
+          role: 'user',
+          content: `Provide AI commentary for this anonymous message:\n\n"${message}"`
+        }
+      ],
+      max_tokens: 150,
+      temperature: 0.7
+    });
+
+    return response.choices[0].message.content;
+  } catch (error) {
+    console.error('AI commentary error:', error.message);
+    return null; // If AI fails, continue without commentary
+  }
+}
+
 // Handle slash command
 app.post('/slack/commands/anon-qa', async (req, res) => {
   try {
@@ -90,9 +126,19 @@ app.post('/slack/commands/anon-qa', async (req, res) => {
 
     // Post message to the target channel
     try {
+      // Get AI commentary (optional, if API key is configured)
+      const aiCommentary = await getAICommentary(text);
+      
+      // Build the final message
+      let finalMessage = `Anonymous message:\n\n${text}`;
+      
+      if (aiCommentary) {
+        finalMessage += `\n\n---\n📊 *AI Commentary:*\n${aiCommentary}`;
+      }
+
       await axios.post('https://slack.com/api/chat.postMessage', {
         channel: targetChannel,
-        text: `Anonymous message:\n\n${text}`,
+        text: finalMessage,
         unfurl_links: false,
         unfurl_media: false
       }, {
@@ -102,7 +148,7 @@ app.post('/slack/commands/anon-qa', async (req, res) => {
         }
       });
 
-      console.log(`Message posted successfully from user ${user_id}`);
+      console.log(`Message posted successfully`);
 
       // Send ephemeral response (only visible to the user)
       return res.json({
