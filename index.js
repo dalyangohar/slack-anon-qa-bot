@@ -2,7 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const crypto = require('crypto');
-const { OpenAI } = require('openai');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -49,79 +48,10 @@ function verifySlackRequest(req) {
   }
 }
 
+// Health check endpoint
 app.get('/', (req, res) => {
   res.json({ status: 'ok', message: 'Anonymous QA Bot is running' });
 });
-
-// Function to detect message language
-function detectLanguage(text) {
-  try {
-    // Check for Cyrillic characters (Russian, Ukrainian, etc.)
-    const cyrillicRegex = /[\u0400-\u04FF]/g;
-    const cyrillicMatches = text.match(cyrillicRegex);
-    
-    // If more than 20% of characters are Cyrillic, consider it Russian
-    if (cyrillicMatches && cyrillicMatches.length > text.length * 0.2) {
-      return 'ru';
-    }
-    
-    return 'en'; // Default to English
-  } catch (error) {
-    console.log('Language detection error:', error.message);
-    return 'en'; // Default to English on error
-  }
-}
-
-// Function to get AI commentary using OpenAI
-async function getAICommentary(message) {
-  try {
-    const openaiApiKey = process.env.OPENAI_API_KEY;
-    
-    if (!openaiApiKey) {
-      console.log('OpenAI API key not configured, skipping AI commentary');
-      return null;
-    }
-
-    // Detect language
-    const language = detectLanguage(message);
-    console.log(`Detected language: ${language} for message: "${message.substring(0, 50)}..."`);
-    
-    // Set system prompt based on language
-    let systemPrompt;
-    let userPrompt;
-    
-    if (language === 'ru') {
-      systemPrompt = 'Ты ассистент, отвечающий за переписывание анонимных сообщений от пользователей через Slack команду. Твои цели: 1) Сохранить исходный смысл сообщения. 2) Улучшить ясность, структуру и тон. 3) Добавить короткий, дружеский, поддерживающий комментарий от себя после сообщения. 4) НЕ раскрывай и не намекай ничего об идентичности отправителя. 5) Кратко, но полезно.';
-      userPrompt = `Переписать сообщение с улучшением ясности и добавить комментарий:\n\n"${message}"`;
-    } else {
-      systemPrompt = 'You are an assistant responsible for rewriting anonymous user messages submitted through a Slack slash command. Your goals: 1) Preserve the original meaning of the user\'s message. 2) Improve clarity, structure, and tone. 3) Add a short, friendly, supportive commentary from yourself (the AI) after the message. 4) Do NOT reveal or imply anything about the original sender\'s identity. 5) Keep the response concise but helpful.';
-      userPrompt = `Rewrite this message for clarity and add commentary:\n\n"${message}"`;
-    }
-
-    const client = new OpenAI({ apiKey: openaiApiKey });
-
-    const response = await client.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: systemPrompt
-        },
-        {
-          role: 'user',
-          content: userPrompt
-        }
-      ],
-      max_tokens: 150,
-      temperature: 0.7
-    });
-
-    return response.choices[0].message.content;
-  } catch (error) {
-    console.error('AI commentary error:', error.message);
-    return null; // If AI fails, continue without commentary
-  }
-}
 
 // Handle slash command
 app.post('/slack/commands/anon-qa', async (req, res) => {
@@ -155,15 +85,8 @@ app.post('/slack/commands/anon-qa', async (req, res) => {
 
     // Post message to the target channel
     try {
-      // Get AI commentary (optional, if API key is configured)
-      const aiCommentary = await getAICommentary(text);
-      
-      // Build the final message
-      let finalMessage = `🔒 *Anonymous message:*\n\n${text}`;
-      
-      if (aiCommentary) {
-        finalMessage += `\n\n---\n📊 *AI Commentary:*\n${aiCommentary}`;
-      }
+      // Build the message
+      const finalMessage = `🔒 *Anonymous message:*\n\n${text}`;
 
       await axios.post('https://slack.com/api/chat.postMessage', {
         channel: targetChannel,
@@ -215,4 +138,3 @@ app.listen(PORT, () => {
   console.log(`🚀 Anonymous QA Bot running on port ${PORT}`);
   console.log(`Bot is ready to receive commands from Slack`);
 });
-
