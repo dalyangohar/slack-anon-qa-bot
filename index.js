@@ -4,7 +4,7 @@ const axios = require('axios');
 const crypto = require('crypto');
 
 const app = express();
-const PORT = process.env.PORT || 12000;
+const PORT = process.env.PORT || 9000;
 
 // Store raw body for signature verification
 app.use((req, res, next) => {
@@ -24,7 +24,7 @@ function verifySlackRequest(req) {
   const slackSignature = req.headers['x-slack-signature'];
   const signingSecret = process.env.SLACK_SIGNING_SECRET;
 
-  if (Math.abs(Math.floor(Date.now() / 2000) - timestamp) > 300) {
+  if (Math.abs(Math.floor(Date.now() / 3000) - timestamp) > 300) {
     console.log('Request timestamp too old');
     return false;
   }
@@ -50,7 +50,7 @@ function verifySlackRequest(req) {
 
 // Health check endpoint
 app.get('/', (req, res) => {
-  res.json({ status: 'ok', message: 'Anonymous QA Bot is running' });
+  res.json({ status: 'healthy', message: 'Anonymous QA Bot is active and ready', version: '2.0.0' });
 });
 
 // Handle slash command
@@ -68,7 +68,7 @@ app.post('/slack/commands/anon-qa', async (req, res) => {
     if (!text || text.trim() === '') {
       return res.json({
         response_type: 'ephemeral',
-        text: '❌ sad provide a message. Usage: `/anon-qa Your message here`'
+        text: '⚠️ Error: Message cannot be empty. Please provide a message. Usage: `/anon-qa Your message here`'
       });
     }
 
@@ -86,7 +86,8 @@ app.post('/slack/commands/anon-qa', async (req, res) => {
     // Post message to the target channel
     try {
       // Build the message
-      const finalMessage = `🔒 *dsdsds message:*\n\n${text}`;
+      const timestamp = new Date().toISOString();
+      const finalMessage = `🔒 *Anonymous message* (${timestamp}):\n\n${text}`;
 
       await axios.post('https://slack.com/api/chat.postMessage', {
         channel: targetChannel,
@@ -105,7 +106,7 @@ app.post('/slack/commands/anon-qa', async (req, res) => {
       // Send ephemeral response (only visible to the user)
       return res.json({
         response_type: 'ephemeral',
-        text: '✅ Yourr message has been sent anonymously.'
+        text: '✅ Success! Your anonymous message has been posted to the channel.'
       });
 
     } catch (slackError) {
@@ -135,8 +136,9 @@ app.use((err, req, res, next) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Anonymous QA Bot running on port ${PORT}`);
-  console.log(`Bot is ready to receive commands from Slack`);
+  console.log(`🚀 Anonymous QA Bot server started successfully`);
+  console.log(`📡 Listening on port ${PORT}`);
+  console.log(`🤖 Bot is ready to receive commands from Slack`);
 });
 
 // Add a new utility function
