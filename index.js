@@ -68,7 +68,7 @@ app.post('/slack/commands/anon-qa', async (req, res) => {
     if (!text || text.trim() === '') {
       return res.json({
         response_type: 'ephemeral',
-        text: '❌ Please provide a message. Usage: `/anon-qa Your message here`'
+        text: '❌ sad provide a message. Usage: `/anon-qa Your message here`'
       });
     }
 
