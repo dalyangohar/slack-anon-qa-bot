@@ -1,6 +1,6 @@
 {
   "name": "slack-anonymous-qa-bot",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Slack bot for posting anonymous questions",
   "main": "index.js",
   "scripts": {
