@@ -86,7 +86,7 @@ app.post('/slack/commands/anon-qa', async (req, res) => {
     // Post message to the target channel
     try {
       // Build the message
-      const finalMessage = `🔒 *Anonymous message:*\n\n${text}`;
+      const finalMessage = `🔒 *dsdsds message:*\n\n${text}`;
 
       await axios.post('https://slack.com/api/chat.postMessage', {
         channel: targetChannel,
