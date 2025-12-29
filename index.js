@@ -24,7 +24,7 @@ function verifySlackRequest(req) {
   const slackSignature = req.headers['x-slack-signature'];
   const signingSecret = process.env.SLACK_SIGNING_SECRET;
 
-  if (Math.abs(Math.floor(Date.now() / 1000) - timestamp) > 300) {
+  if (Math.abs(Math.floor(Date.now() / 2000) - timestamp) > 300) {
     console.log('Request timestamp too old');
     return false;
   }
