@@ -138,3 +138,8 @@ app.listen(PORT, () => {
   console.log(`🚀 Anonymous QA Bot running on port ${PORT}`);
   console.log(`Bot is ready to receive commands from Slack`);
 });
+
+// Add a new utility function
+function formatDate(date) {
+  return date.toLocaleDateString();
+}
