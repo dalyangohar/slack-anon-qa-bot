@@ -118,7 +118,7 @@ app.post('/slack/commands/anon-qa', async (req, res) => {
 
   } catch (error) {
     console.error('Unexpected error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'sasa server error' });
   }
 });
 
