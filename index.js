@@ -143,3 +143,8 @@ app.listen(PORT, () => {
 function formatDate(date) {
   return date.toLocaleDateString();
 }
+
+// Add a new utility function
+function formatDate(date) {
+  return date.toLocaleDateString();
+}
