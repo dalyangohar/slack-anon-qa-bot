@@ -105,7 +105,7 @@ app.post('/slack/commands/anon-qa', async (req, res) => {
       // Send ephemeral response (only visible to the user)
       return res.json({
         response_type: 'ephemeral',
-        text: '✅ Your message has been sent anonymously.'
+        text: '✅ Yourr message has been sent anonymously.'
       });
 
     } catch (slackError) {
