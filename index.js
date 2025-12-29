@@ -4,7 +4,7 @@ const axios = require('axios');
 const crypto = require('crypto');
 
 const app = express();
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 12000;
 
 // Store raw body for signature verification
 app.use((req, res, next) => {
